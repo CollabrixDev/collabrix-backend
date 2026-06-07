@@ -1,0 +1,74 @@
+name: Build & Test
+
+on:
+  push:
+    branches: [ main, develop, feature/** ]
+  pull_request:
+    branches: [ main ]
+    types: [ opened, synchronize, reopened ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        java-version: [ '21' ]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Set up JDK ${{ matrix.java-version }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ matrix.java-version }}
+        distribution: 'temurin'
+        cache: maven
+    
+    - name: Display Java version
+      run: java -version
+    
+    - name: Compile project
+      run: mvn clean compile -DskipTests
+      
+    - name: Run unit tests
+      run: mvn test -B
+      
+    - name: Run integration tests
+      run: mvn verify -B -DskipUnitTests
+      
+    - name: Generate test report
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: target/surefire-reports/
+        
+    - name: Publish test results
+      if: always()
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      with:
+        files: target/surefire-reports/**/*.xml
+        
+    - name: Generate code coverage
+      run: mvn jacoco:report
+      
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./target/site/jacoco/jacoco.xml
+        flags: unittests
+        name: codecov-umbrella
+        
+    - name: Check build status
+      if: failure()
+      run: |
+        echo "❌ Build or Tests Failed"
+        exit 1
+        
+    - name: Success notification
+      if: success()
+      run: echo "✅ Build successful! All tests passed."
