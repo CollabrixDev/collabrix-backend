@@ -1,0 +1,75 @@
+spring:
+  application:
+    name: syncspace-backend
+  
+  # DataSource Configuration
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/syncspace}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
+  
+  # JPA/Hibernate Configuration
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 20
+    show-sql: false
+  
+  # Jackson Configuration
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+      indent-output: true
+    default-property-inclusion: non_null
+
+  # WebSocket Configuration
+  websocket:
+    message-broker: /topic
+    application-destination-prefix: /app
+
+# Server Configuration
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+  compression:
+    enabled: true
+    min-response-size: 1024
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:your-secret-key-change-in-production-this-must-be-very-long-and-secure}
+  expiration: 86400000 # 24 hours in milliseconds
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.syncspace: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Springdoc OpenAPI Configuration
+springdoc:
+  swagger-ui:
+    path: /swagger-ui/index.html
+    enabled: true
+  api-docs:
+    path: /v3/api-docs
+  default-produces-media-type: application/json
